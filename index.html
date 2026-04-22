@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#080e14" />
+  <meta name="description" content="Portal Oficial da Pescaria Esportiva Araguaia 2026 — Turmalina MG" />
+  <link rel="manifest" href="manifest.json" />
   <title>Portal Oficial Araguaia 2026</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,6 +20,16 @@
   <div class="bg-photo"></div>
   <div class="bg-overlay-dark"></div>
   <div class="water-lines"></div>
+
+  <!-- WhatsApp FAB -->
+  <a class="whatsapp-fab" href="https://wa.me/?text=🎣 Confira o Portal Oficial da Pescaria Araguaia 2026! https://leandroofonsecaa.github.io/araguaia2026/" target="_blank" title="Compartilhar no WhatsApp">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.557 4.118 1.531 5.845L0 24l6.335-1.511A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.882a9.87 9.87 0 01-5.031-1.374l-.361-.214-3.741.981.999-3.648-.235-.374A9.855 9.855 0 012.118 12C2.118 6.533 6.533 2.118 12 2.118S21.882 6.533 21.882 12 17.467 21.882 12 21.882z"/></svg>
+  </a>
+
+  <!-- Sound: fishing line -->
+  <audio id="soundFish" preload="auto">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg" />
+  </audio>
 
   <!-- ===== HEADER ===== -->
   <header class="header" id="siteHeader">
@@ -41,6 +54,7 @@
       </nav>
 
       <button class="menu-toggle" id="menuToggle" aria-label="Menu">☰</button>
+      <button class="btn-instalar" id="btnInstalarApp" style="display:none" onclick="instalarApp()">📲 Instalar</button>
     </div>
   </header>
 
@@ -80,6 +94,22 @@
       <div class="info-banner">
         <span class="pulse-dot"></span>
         <strong>22/04/2026</strong> &nbsp;— Saída de Turmalina às 08h00 · Destino: Luiz Alves
+      </div>
+
+      <!-- BANNER EXPEDIÇÃO EM ANDAMENTO (aparece só durante 22-29/04) -->
+      <div class="expedicao-banner" id="expedicaoBanner" style="display:none">
+        <div class="exp-banner-icon">🎣</div>
+        <div class="exp-banner-text">
+          <strong>EXPEDIÇÃO EM ANDAMENTO!</strong>
+          <span id="expedicaoDiaAtual">Pescaria no Araguaia · Luiz Alves</span>
+        </div>
+        <div class="exp-banner-pulse"></div>
+      </div>
+
+      <!-- RANKING DESTAQUE (aparece só durante a expedição) -->
+      <div class="ranking-destaque card" id="rankingDestaque" style="display:none">
+        <h3 class="card-title">🏆 Liderança ao Vivo</h3>
+        <div id="rankingDestaqueList"></div>
       </div>
 
       <!-- CONTAGEM REGRESSIVA -->
@@ -280,6 +310,18 @@
         <h2 class="section-title">📅 CRONOGRAMA</h2>
         <p class="section-desc">A jornada épica começa aqui. Cada capítulo desta história foi escrito com suor, sol e muita linha no fundo do rio.</p>
       </div>
+
+      <!-- BARRA DE PROGRESSO DA EXPEDIÇÃO -->
+      <div class="card expedicao-progress">
+        <div class="exp-label" id="progressLabel">Calculando…</div>
+        <div class="exp-track">
+          <div class="exp-fill" id="progressBar" style="width:0%"></div>
+        </div>
+        <div class="exp-datas">
+          <span>22/04 Partida</span>
+          <span>29/04 Retorno</span>
+        </div>
+      </div>
       <div class="timeline">
 
         <div class="timeline-chapter">
@@ -445,6 +487,29 @@
         <h2 class="section-title">🏆 COMPETIÇÃO</h2>
         <p class="section-desc">Registre sua captura. Que os pontos falem mais alto que as histórias.</p>
       </div>
+
+      <!-- PÓDIO -->
+      <div class="podium-wrap" id="podiumWrap" style="display:none">
+        <h3 class="card-title" style="text-align:center;margin-bottom:20px">🥇 Pódio ao Vivo</h3>
+        <div class="podium-stage">
+          <div class="podium-col" id="pod2">
+            <div class="podium-name" id="pod2name">—</div>
+            <div class="podium-pts"  id="pod2pts">—</div>
+            <div class="podium-block silver-block"><span>🥈</span></div>
+          </div>
+          <div class="podium-col" id="pod1">
+            <div class="podium-name" id="pod1name">—</div>
+            <div class="podium-pts"  id="pod1pts">—</div>
+            <div class="podium-block gold-block"><span>🥇</span></div>
+          </div>
+          <div class="podium-col" id="pod3">
+            <div class="podium-name" id="pod3name">—</div>
+            <div class="podium-pts"  id="pod3pts">—</div>
+            <div class="podium-block bronze-block"><span>🥉</span></div>
+          </div>
+        </div>
+      </div>
+
       <div class="comp-grid">
         <div class="card">
           <h3 class="card-title">🎣 Registrar Captura</h3>
@@ -528,37 +593,161 @@
       <div class="gallery-grid" id="galleryGrid"></div>
     </section>
 
+    <!-- MODAL LEGENDA FOTO -->
+    <div class="modal-legenda" id="modalLegenda" style="display:none">
+      <div class="modal-legenda-box card">
+        <h3 class="card-title">🖼️ Adicionar Legenda</h3>
+        <div id="legendaPreviewWrap" style="margin-bottom:16px;border-radius:10px;overflow:hidden;max-height:220px">
+          <img id="legendaPreviewImg" src="" alt="" style="width:100%;object-fit:cover;max-height:220px;display:block" />
+        </div>
+        <div class="form-group">
+          <label>Quem aparece na foto?</label>
+          <input type="text" id="legendaNome" placeholder="Ex: Marquim pescando" class="input-field" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label>Data</label>
+          <input type="text" id="legendaData" placeholder="Ex: 24/04" class="input-field" />
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <button class="btn-primary" onclick="salvarLegenda()" style="flex:1">✅ Salvar Foto</button>
+          <button class="btn-danger" onclick="cancelarLegenda()" style="flex:0 0 auto">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- TRANSPARÊNCIA -->
     <section class="section" id="transparencia">
       <div class="section-hero">
         <h2 class="section-title">🔒 TRANSPARÊNCIA</h2>
         <p class="section-desc">Porque pescador honesto não precisa esconder nada. (Exceto o ponto secreto do rio.)</p>
       </div>
-      <div class="reg-grid">
-        <div class="card transp-card">
-          <div class="transp-icon">💰</div>
-          <h3>Financeiro</h3>
-          <p>Prestação de contas da vaquinha, combustível, alimentação e despesas da expedição.</p>
-          <span class="badge-em-breve">Em breve</span>
+
+      <!-- RESUMO FINANCEIRO -->
+      <div class="fin-summary">
+        <div class="fin-card fin-green">
+          <div class="fin-icon">💰</div>
+          <div class="fin-val">R$ 83.000</div>
+          <div class="fin-label">Total Arrecadado</div>
+          <div class="fin-sub">29 pescadores × R$3.000 + 2 barraqueiros × R$2.500</div>
         </div>
-        <div class="card transp-card">
-          <div class="transp-icon">📋</div>
-          <h3>Validações</h3>
-          <p>Registro de capturas validadas pela comissão oficial com data, hora e testemunhas.</p>
-          <span class="badge-em-breve">Em breve</span>
+        <div class="fin-card fin-blue">
+          <div class="fin-icon">📋</div>
+          <div class="fin-val">R$ 79.565</div>
+          <div class="fin-label">Total Previsto</div>
+          <div class="fin-sub">Orçamento planejado da expedição</div>
         </div>
-        <div class="card transp-card">
-          <div class="transp-icon">📊</div>
-          <h3>Estatísticas</h3>
-          <p>Dados históricos: espécies mais capturadas, melhores pescadores e recordes da competição.</p>
-          <span class="badge-em-breve">Em breve</span>
+        <div class="fin-card fin-amber">
+          <div class="fin-icon">✅</div>
+          <div class="fin-val">R$ 56.365</div>
+          <div class="fin-label">Total Realizado</div>
+          <div class="fin-sub">Despesas já efetuadas</div>
         </div>
-        <div class="card transp-card">
-          <div class="transp-icon">🏛️</div>
-          <h3>Atas & Decisões</h3>
-          <p>Decisões da comissão, recursos julgados e comunicados oficiais da pescaria esportiva.</p>
-          <span class="badge-em-breve">Em breve</span>
+        <div class="fin-card fin-teal">
+          <div class="fin-icon">🏦</div>
+          <div class="fin-val">R$ 26.634</div>
+          <div class="fin-label">Saldo em Conta</div>
+          <div class="fin-sub">Disponível para despesas restantes</div>
         </div>
+      </div>
+
+      <!-- BARRA DE PROGRESSO DO ORÇAMENTO -->
+      <div class="card mt-lg">
+        <h3 class="card-title">📊 Execução do Orçamento</h3>
+        <div class="budget-bars">
+          <div class="budget-row">
+            <span class="budget-label">🚌 Transporte</span>
+            <div class="budget-track"><div class="budget-fill" style="width:100%" data-val="R$ 30.000"></div></div>
+            <span class="budget-amt">R$ 30.000</span>
+          </div>
+          <div class="budget-row">
+            <span class="budget-label">🏠 Hospedagem</span>
+            <div class="budget-track"><div class="budget-fill" style="width:77%" data-val="R$ 11.500"></div></div>
+            <span class="budget-amt">R$ 11.500</span>
+          </div>
+          <div class="budget-row">
+            <span class="budget-label">⛵ Barqueiros</span>
+            <div class="budget-track"><div class="budget-fill" style="width:36%" data-val="R$ 5.400"></div></div>
+            <span class="budget-amt">R$ 5.400</span>
+          </div>
+          <div class="budget-row">
+            <span class="budget-label">🛒 Supermercado</span>
+            <div class="budget-track"><div class="budget-fill" style="width:38%" data-val="R$ 5.715"></div></div>
+            <span class="budget-amt">R$ 5.715</span>
+          </div>
+          <div class="budget-row">
+            <span class="budget-label">🍳 Cozinha</span>
+            <div class="budget-track"><div class="budget-fill" style="width:35%" data-val="R$ 5.200"></div></div>
+            <span class="budget-amt">R$ 5.200</span>
+          </div>
+          <div class="budget-row">
+            <span class="budget-label">⛽ Gás</span>
+            <div class="budget-track"><div class="budget-fill" style="width:1%" data-val="R$ 150"></div></div>
+            <span class="budget-amt">R$ 150</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABELA DE PAGAMENTOS -->
+      <div class="card mt-lg">
+        <h3 class="card-title">🧾 Despesas Realizadas</h3>
+        <div class="desp-table">
+          <div class="desp-row desp-header">
+            <span>Fornecedor / Serviço</span>
+            <span>Categoria</span>
+            <span>Valor</span>
+          </div>
+          <div class="desp-row">
+            <span>Xavier Tur</span>
+            <span class="desp-cat cat-transport">🚌 Transporte</span>
+            <span class="desp-val">R$ 30.000</span>
+          </div>
+          <div class="desp-row">
+            <span>Irany Ribeiro (Hospedagem)</span>
+            <span class="desp-cat cat-hospedagem">🏠 Hospedagem</span>
+            <span class="desp-val">R$ 8.500</span>
+          </div>
+          <div class="desp-row">
+            <span>Casa 2</span>
+            <span class="desp-cat cat-hospedagem">🏠 Hospedagem</span>
+            <span class="desp-val">R$ 3.000</span>
+          </div>
+          <div class="desp-row">
+            <span>Supermercado José Silva</span>
+            <span class="desp-cat cat-super">🛒 Supermercado</span>
+            <span class="desp-val">R$ 5.715</span>
+          </div>
+          <div class="desp-row">
+            <span>Abraão (Cozinha)</span>
+            <span class="desp-cat cat-cozinha">🍳 Cozinha</span>
+            <span class="desp-val">R$ 3.000</span>
+          </div>
+          <div class="desp-row">
+            <span>Anderson (Frangos)</span>
+            <span class="desp-cat cat-cozinha">🍳 Cozinha</span>
+            <span class="desp-val">R$ 600</span>
+          </div>
+          <div class="desp-row">
+            <span>9 Barqueiros</span>
+            <span class="desp-cat cat-barco">⛵ Barqueiros</span>
+            <span class="desp-val">R$ 5.400</span>
+          </div>
+          <div class="desp-row">
+            <span>Gás para almoço</span>
+            <span class="desp-cat cat-outros">⛽ Outros</span>
+            <span class="desp-val">R$ 150</span>
+          </div>
+          <div class="desp-row desp-total">
+            <span><strong>TOTAL REALIZADO</strong></span>
+            <span></span>
+            <span><strong>R$ 56.365</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTA -->
+      <div class="card mt-lg transp-note">
+        <span>📌</span>
+        <p>Dados atualizados em 21/04/2026. Despesas adicionais durante a pescaria serão prestadas no retorno. Qualquer participante pode solicitar esclarecimentos ao organizador.</p>
       </div>
     </section>
 
