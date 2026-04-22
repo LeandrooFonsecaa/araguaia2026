@@ -9,7 +9,7 @@
    DADOS FIXOS
 =========================== */
 const BARCOS = [
-  { nome: 'Chumbinho', tripulacao: ['Marquim', 'Tinda', 'Nelson'] },
+  { nome: 'Chumbinho', tripulacao: ['Marquim', 'Nalter', 'Nelson'] },
   { nome: 'Cacique',   tripulacao: ['Alexandre', 'Junior', 'Digão'] },
   { nome: 'Betão',     tripulacao: ['Leo', 'Omar', 'Max'] },
   { nome: 'Gaúcho',    tripulacao: ['Renato', 'Tu', 'Reinaldo'] },
@@ -17,13 +17,13 @@ const BARCOS = [
   { nome: 'Adriano',   tripulacao: ['Denda', 'Maxixe', 'Té'] },
   { nome: 'Japão',     tripulacao: ['Som', 'Nego', 'Valdir'] },
   { nome: 'Nelson',    tripulacao: ['Ninim', 'Feio', 'Bertim'] },
-  { nome: 'Zangado',   tripulacao: ['Zé Geraldo', 'Leo Pereira'] },
+  { nome: 'Zangado',   tripulacao: ['Zé Geraldo', 'Fernando'] },
 ];
 
 const QUARTOS = [
   { nome: 'Quarto 01', hospedes: ['Alexandre', 'Maxixe'] },
   { nome: 'Quarto 02', hospedes: ['Ninim', 'Feio', 'Abrão'] },
-  { nome: 'Quarto 03', hospedes: ['Marquim', 'Tinda', 'Nelson'] },
+  { nome: 'Quarto 03', hospedes: ['Marquim', 'Nalter', 'Nelson'] },
   { nome: 'Quarto 04', hospedes: ['Renato', 'Tu', 'Reinaldo', 'Bertim', 'Max'] },
   { nome: 'Quarto 05', hospedes: ['Som', 'Nego', 'Valdir', 'Itamar', 'Zé Maria'] },
   { nome: 'Quarto 06', hospedes: ['Denda', 'Lela', 'Adilton', 'Té', 'Digão'] },
@@ -85,6 +85,7 @@ function initNav() {
       // Trigger section-specific updates
       if (target === 'competicao') renderRanking();
       if (target === 'dashboard')  updateDashboard();
+      if (target === 'galeria')    carregarFotosCloudinary();
 
       // Trigger stat card animations on dashboard
       if (target === 'dashboard') animateStatCards();
@@ -154,12 +155,12 @@ function updateDashboard() {
   const pescEl = document.getElementById('totalPescadores');
   animateCounter(pescEl, all.size);
 
-  // Maior peixe
+  // Maior peixe (pontuação)
   const capturas  = getCapituras();
   const maiorEl   = document.getElementById('maiorPeixe');
   if (capturas.length > 0) {
-    const maior = capturas.reduce((a, b) => b.tamanho > a.tamanho ? b : a);
-    maiorEl.textContent = maior.tamanho + ' cm';
+    const maior = capturas.reduce((a, b) => b.pontos > a.pontos ? b : a);
+    maiorEl.textContent = maior.pontos + ' pts';
   } else {
     maiorEl.textContent = '–';
   }
@@ -328,37 +329,220 @@ function buscarPescador() {
 }
 
 /* ===========================
-   GALERIA
+   CONTAGEM REGRESSIVA
 =========================== */
-function renderGaleria() {
-  const grid = document.getElementById('galleryGrid');
-  const imgs = getGaleria();
-  grid.innerHTML = imgs.map((src, i) => `
-    <img src="${src}" class="gallery-img" loading="lazy" alt="Foto ${i + 1}" onclick="zoomImg(this.src)" />`).join('');
+const LARGADA = new Date('2026-04-22T08:00:00');
+
+function initCountdown() {
+  tickCountdown();
+  setInterval(tickCountdown, 1000);
 }
 
-function uploadImagens(e) {
-  const files = Array.from(e.target.files);
-  if (!files.length) return;
-  let done = 0;
-  const galeria = getGaleria();
+function tickCountdown() {
+  const agora = new Date();
+  const diff  = LARGADA - agora;
 
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      galeria.push(ev.target.result);
-      done++;
-      if (done === files.length) {
-        saveGaleria(galeria);
-        renderGaleria();
-        showToast(`📷 ${files.length} foto(s) adicionada(s)!`);
-        vibrate([20, 30, 20]);
+  const labelTop = document.getElementById('cdLabelTop');
+  const cdSub    = document.getElementById('cdSub');
+  const cdUnits  = document.getElementById('cdUnits');
+
+  if (!labelTop) return;
+
+  if (diff <= 0) {
+    // Já saiu!
+    labelTop.textContent = '🎣 A expedição está em andamento!';
+    cdSub.textContent    = 'Bons peixes a todos no Araguaia!';
+    if (cdUnits) cdUnits.style.display = 'none';
+    return;
+  }
+
+  if (cdUnits) cdUnits.style.display = 'flex';
+
+  const dias  = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const min   = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seg   = Math.floor((diff % (1000 * 60)) / 1000);
+
+  document.getElementById('cdDias').textContent  = String(dias).padStart(2, '0');
+  document.getElementById('cdHoras').textContent = String(horas).padStart(2, '0');
+  document.getElementById('cdMin').textContent   = String(min).padStart(2, '0');
+  document.getElementById('cdSeg').textContent   = String(seg).padStart(2, '0');
+
+  // Mensagem dinâmica
+  if (dias === 0 && horas === 0) {
+    labelTop.textContent = '🚨 MENOS DE 1 HORA PRA LARGADA!';
+  } else if (dias === 0) {
+    labelTop.textContent = '🔥 É HOJE! Faltam apenas';
+  } else if (dias === 1) {
+    labelTop.textContent = '⏳ Falta 1 dia para a largada';
+  } else {
+    labelTop.textContent = '⏳ Faltam para a largada';
+  }
+}
+
+
+const CLOUDINARY_CLOUD = 'dgcbu6x0j';
+const CLOUDINARY_PRESET = 'araguaia2026'; // upload preset (unsigned)
+const CLOUDINARY_FOLDER = 'araguaia2026';
+
+// Chave local para cache das URLs já carregadas
+const getGaleriaCloud = () => { try { return JSON.parse(localStorage.getItem('araguaia_galeria_cloud') || '[]'); } catch { return []; } };
+const saveGaleriaCloud = arr => { try { localStorage.setItem('araguaia_galeria_cloud', JSON.stringify(arr)); } catch {} };
+
+let _cwWidget = null;
+
+function abrirUploadCloudinary() {
+  if (!_cwWidget) {
+    _cwWidget = cloudinary.createUploadWidget(
+      {
+        cloudName:    CLOUDINARY_CLOUD,
+        uploadPreset: CLOUDINARY_PRESET,
+        folder:       CLOUDINARY_FOLDER,
+        sources:      ['local', 'camera'],
+        multiple:     true,
+        maxFiles:     10,
+        maxFileSize:  10000000, // 10MB
+        clientAllowedFormats: ['jpg', 'jpeg', 'png', 'webp', 'heic'],
+        language: 'pt',
+        text: {
+          pt: {
+            or:            'ou',
+            back:          'Voltar',
+            advanced:      'Avançado',
+            close:         'Fechar',
+            no_results:    'Sem resultados',
+            search_placeholder: 'Buscar arquivos',
+            about_uw:      'Upload Widget',
+            menu: { files: 'Meus Arquivos', camera: 'Câmera' },
+            selection_counter: { file: 'arquivo', files: 'arquivos' },
+            actions: { upload: 'Enviar', clear_all: 'Limpar tudo', log_out: 'Sair' },
+            notifications: { general_error: 'Erro no upload.', general_prompt: 'Você tem alterações não salvas.', limit_reached: 'Limite de arquivos atingido.' },
+            queue: {
+              title: 'Fila de upload',
+              title_uploading_with_counter: 'Enviando {{num}} arquivo(s)',
+              title_uploading: 'Enviando arquivos',
+              upload_completed: 'Upload concluído',
+              calc_size: 'Calculando tamanho…',
+              upload_progress: '{{percent}}% concluído',
+              mini_title: 'Enviado',
+              mini_title_uploading: 'Enviando…',
+              done: 'Concluído',
+              mini_upload_count: '{{num}} enviado(s)',
+              statuses: {
+                uploading: 'Enviando…',
+                error:     'Erro',
+                uploaded:  'Concluído',
+                aborted:   'Cancelado',
+              },
+            },
+          },
+        },
+        styles: {
+          palette: {
+            window:      '#0d1b24',
+            windowBorder:'#ffa500',
+            tabIcon:     '#ffa500',
+            menuIcons:   '#c7d5db',
+            textDark:    '#ffffff',
+            textLight:   '#ffffff',
+            link:        '#ffa500',
+            action:      '#ffa500',
+            inactiveTabIcon: '#6b8a99',
+            error:       '#e63946',
+            inProgress:  '#00c9a7',
+            complete:    '#00c9a7',
+            sourceBg:    '#111f2a',
+          },
+          fonts: { default: null, "'Exo 2', sans-serif": { url: 'https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600&display=swap', active: true } },
+        },
+      },
+      (error, result) => {
+        if (error) { showToast('❌ Erro no upload: ' + (error.message || error)); return; }
+
+        if (result.event === 'success') {
+          const url = result.info.secure_url;
+          const cached = getGaleriaCloud();
+          if (!cached.includes(url)) {
+            cached.unshift(url); // mais recente primeiro
+            saveGaleriaCloud(cached);
+          }
+          renderGaleriaCloud();
+          showToast('📷 Foto adicionada com sucesso!');
+          vibrate([20, 30, 20]);
+        }
+
+        if (result.event === 'queues-end') {
+          document.getElementById('uploadStatus').textContent = '';
+        }
       }
-    };
-    reader.readAsDataURL(file);
-  });
-  e.target.value = '';
+    );
+  }
+  _cwWidget.open();
 }
+
+async function carregarFotosCloudinary() {
+  const grid    = document.getElementById('galleryGrid');
+  const loading = document.getElementById('galleryLoading');
+
+  loading.style.display = 'block';
+  grid.innerHTML = '';
+
+  try {
+    // Busca as imagens da pasta via API de busca do Cloudinary (sem autenticação para leitura pública)
+    const url = `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/list/${CLOUDINARY_FOLDER}.json`;
+    const res  = await fetch(url);
+
+    if (!res.ok) throw new Error('Lista não disponível');
+
+    const data    = await res.json();
+    const urls    = (data.resources || []).map(r =>
+      `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/upload/q_auto,f_auto,w_600/${r.public_id}`
+    );
+
+    // Mescla com cache local (uploads recentes que ainda não estão no JSON)
+    const cached  = getGaleriaCloud();
+    const merged  = [...new Set([...cached, ...urls])];
+
+    loading.style.display = 'none';
+
+    if (!merged.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-dim);padding:40px">Nenhuma foto ainda. Seja o primeiro a registrar a expedição! 📸</div>';
+      return;
+    }
+
+    grid.innerHTML = merged.map((src, i) =>
+      `<img src="${src}" class="gallery-img" loading="lazy" alt="Foto ${i + 1}" onclick="zoomImg('${src}')" />`
+    ).join('');
+
+  } catch {
+    // Fallback: usa apenas o cache local
+    loading.style.display = 'none';
+    const cached = getGaleriaCloud();
+
+    if (!cached.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-dim);padding:40px">Nenhuma foto ainda. Seja o primeiro! 📸</div>';
+      return;
+    }
+
+    grid.innerHTML = cached.map((src, i) =>
+      `<img src="${src}" class="gallery-img" loading="lazy" alt="Foto ${i + 1}" onclick="zoomImg('${src}')" />`
+    ).join('');
+  }
+}
+
+function renderGaleriaCloud() {
+  const cached = getGaleriaCloud();
+  const grid   = document.getElementById('galleryGrid');
+
+  if (!cached.length) return;
+
+  grid.innerHTML = cached.map((src, i) =>
+    `<img src="${src}" class="gallery-img" loading="lazy" alt="Foto ${i + 1}" onclick="zoomImg('${src}')" />`
+  ).join('');
+}
+
+// Mantém compatibilidade com nome antigo (não usada mais, mas não quebra nada)
+function renderGaleria() { renderGaleriaCloud(); }
 
 function zoomImg(src) {
   const overlay = document.createElement('div');
@@ -441,15 +625,69 @@ function initObserver() {
 }
 
 /* ===========================
+   CARROSSEL
+=========================== */
+function initCarousel() {
+  const track  = document.getElementById('carouselTrack');
+  const slides = track ? Array.from(track.querySelectorAll('.carousel-slide')) : [];
+  const dotsEl = document.getElementById('carouselDots');
+  const prev   = document.getElementById('carouselPrev');
+  const next   = document.getElementById('carouselNext');
+
+  if (!slides.length) return;
+
+  let current = 0;
+  let autoTimer;
+
+  // Criar dots
+  dotsEl.innerHTML = slides.map((_, i) =>
+    `<div class="carousel-dot${i === 0 ? ' active' : ''}" data-i="${i}"></div>`
+  ).join('');
+
+  const dots = dotsEl.querySelectorAll('.carousel-dot');
+
+  function goTo(idx) {
+    current = (idx + slides.length) % slides.length;
+    track.style.transform = `translateX(-${current * 100}%)`;
+    track.style.transition = 'transform 0.45s cubic-bezier(0.4,0,0.2,1)';
+    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  // Tornar a track flex com translateX
+  track.style.display   = 'flex';
+  track.style.transform = 'translateX(0)';
+
+  prev.addEventListener('click', () => { goTo(current - 1); resetAuto(); });
+  next.addEventListener('click', () => { goTo(current + 1); resetAuto(); });
+
+  dots.forEach(d => d.addEventListener('click', () => { goTo(+d.dataset.i); resetAuto(); }));
+
+  // Touch/swipe
+  let startX = 0;
+  track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  track.addEventListener('touchend',   e => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) { goTo(diff > 0 ? current + 1 : current - 1); resetAuto(); }
+  });
+
+  // Autoplay
+  function startAuto() { autoTimer = setInterval(() => goTo(current + 1), 4000); }
+  function resetAuto()  { clearInterval(autoTimer); startAuto(); }
+  startAuto();
+}
+
+/* ===========================
    INIT
 =========================== */
 document.addEventListener('DOMContentLoaded', () => {
   initScrollHeader();
   initNav();
   initObserver();
+  initCountdown();
+  initCarousel();
   updateDashboard();
   renderLogistica();
-  renderGaleria();
+  renderGaleriaCloud();
   initPontosPreview();
   renderRanking();
 
