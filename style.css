@@ -1327,3 +1327,50 @@ body {
   font-size: 0.78rem;
   color: var(--amber-lt);
 }
+
+/* ===== TRANSPARÊNCIA — LOADING & BOTÃO ===== */
+.transp-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 40px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.transp-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: var(--teal-lt);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-planilha {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(66,133,244,0.12);
+  border: 1px solid rgba(66,133,244,0.35);
+  color: #7baaf7;
+  border-radius: 100px;
+  padding: 10px 22px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  letter-spacing: 0.5px;
+}
+
+.btn-planilha:hover {
+  background: rgba(66,133,244,0.22);
+  border-color: rgba(66,133,244,0.6);
+  transform: translateY(-1px);
+}

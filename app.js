@@ -81,9 +81,10 @@ function initNav() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // Trigger section-specific updates
-      if (target === 'competicao') renderRanking();
-      if (target === 'dashboard')  updateDashboard();
-      if (target === 'galeria')    carregarFotosCloudinary();
+      if (target === 'competicao')    renderRanking();
+      if (target === 'dashboard')     updateDashboard();
+      if (target === 'galeria')       carregarFotosCloudinary();
+      if (target === 'transparencia') carregarTransparencia();
 
       // Trigger stat card animations on dashboard
       if (target === 'dashboard') animateStatCards();
@@ -734,8 +735,139 @@ function setupCarousel(innerId, prevId, nextId, dotsId, interval) {
 }
 
 /* ===========================
-   SOM — LINHA FISGANDO
+   TRANSPARÊNCIA — GOOGLE SHEETS
 =========================== */
+const SHEET_ID = '1shWms_mr0JgmHe9kRgROE7Ge1LcQUihQPyYMR43OnU0';
+
+const CAT_CONFIG = {
+  'Barqueiros':        { emoji: '⛵', css: 'cat-barco' },
+  'Hospedagem':        { emoji: '🏠', css: 'cat-hospedagem' },
+  'Cozinha':           { emoji: '🍳', css: 'cat-cozinha' },
+  'Gás para o almoço': { emoji: '⛽', css: 'cat-outros' },
+  'Transporte':        { emoji: '🚌', css: 'cat-transport' },
+  'Supermercado':      { emoji: '🛒', css: 'cat-super' },
+};
+
+function fmtBRL(val) {
+  return 'R$ ' + Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+async function carregarTransparencia() {
+  const loading  = document.getElementById('transpLoading');
+  const erro     = document.getElementById('transpErro');
+  const conteudo = document.getElementById('transpConteudo');
+  if (!loading) return;
+
+  loading.style.display = 'flex';
+  erro.style.display    = 'none';
+  conteudo.style.display = 'none';
+
+  try {
+    // Busca aba Pagamentos via GViz API (pública, sem autenticação)
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Pagamentos`;
+    const res  = await fetch(url);
+    const text = await res.text();
+
+    // Google retorna JSONP — extrai o JSON puro
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const rows = json.table.rows;
+
+    // Extrai totais do lado direito da planilha (colunas H/I)
+    // Estrutura: col 7 = label, col 8 = valor
+    let arrecadado = 0, previsto = 0, realizado = 0, saldo = 0;
+
+    rows.forEach(row => {
+      const cells = row.c || [];
+      const label = cells[7]?.v || '';
+      const val   = cells[8]?.v || 0;
+      if (typeof label === 'string') {
+        if (label.includes('Arrecadado')) arrecadado = val;
+        if (label.includes('Previsto'))   previsto   = val;
+        if (label.includes('Realizado'))  realizado  = val;
+        if (label.includes('Saldo'))      saldo      = val;
+      }
+    });
+
+    // Extrai linhas de despesas (colunas: Nome=1, Data=2, Categoria=3, Valor=4, Pago=5)
+    const despesas = [];
+    rows.forEach(row => {
+      const cells = row.c || [];
+      const nome     = cells[1]?.v;
+      const categoria = cells[3]?.v;
+      const pago      = cells[5]?.v;
+      const situacao  = cells[6]?.v;
+      if (nome && categoria && pago && pago > 0) {
+        despesas.push({ nome, categoria, pago });
+      }
+    });
+
+    // Agrupa por categoria para as barras
+    const porCategoria = {};
+    despesas.forEach(d => {
+      const cat = d.categoria;
+      if (!porCategoria[cat]) porCategoria[cat] = 0;
+      porCategoria[cat] += d.pago;
+    });
+
+    // Renderiza resumo
+    if (arrecadado) document.getElementById('finArrecadado').textContent = fmtBRL(arrecadado);
+    if (previsto)   document.getElementById('finPrevisto').textContent   = fmtBRL(previsto);
+    if (realizado)  document.getElementById('finRealizado').textContent  = fmtBRL(realizado);
+    if (saldo)      document.getElementById('finSaldo').textContent      = fmtBRL(saldo);
+
+    // Renderiza barras
+    const maxCat = Math.max(...Object.values(porCategoria), 1);
+    const barsEl = document.getElementById('budgetBars');
+    barsEl.innerHTML = Object.entries(porCategoria)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, val]) => {
+        const cfg = CAT_CONFIG[cat] || { emoji: '💸', css: 'cat-outros' };
+        const pct = Math.round((val / maxCat) * 100);
+        return `<div class="budget-row">
+          <span class="budget-label">${cfg.emoji} ${cat}</span>
+          <div class="budget-track"><div class="budget-fill" style="width:${pct}%"></div></div>
+          <span class="budget-amt">${fmtBRL(val)}</span>
+        </div>`;
+      }).join('');
+
+    // Renderiza tabela de despesas
+    const tableEl = document.getElementById('despTable');
+    tableEl.innerHTML = `
+      <div class="desp-row desp-header">
+        <span>Fornecedor / Serviço</span>
+        <span>Categoria</span>
+        <span>Valor Pago</span>
+      </div>` +
+      despesas.map(d => {
+        const cfg = CAT_CONFIG[d.categoria] || { emoji: '💸', css: 'cat-outros' };
+        return `<div class="desp-row">
+          <span>${escapeHtml(d.nome)}</span>
+          <span class="desp-cat ${cfg.css}">${cfg.emoji} ${escapeHtml(d.categoria)}</span>
+          <span class="desp-val">${fmtBRL(d.pago)}</span>
+        </div>`;
+      }).join('') +
+      `<div class="desp-row desp-total">
+        <span><strong>TOTAL REALIZADO</strong></span>
+        <span></span>
+        <span><strong>${fmtBRL(realizado)}</strong></span>
+      </div>`;
+
+    // Timestamp
+    const agora = new Date().toLocaleString('pt-BR');
+    document.getElementById('transpAtualizadoEm').textContent =
+      `✅ Dados carregados diretamente da planilha oficial · Atualizado em ${agora}`;
+
+    loading.style.display  = 'none';
+    conteudo.style.display = 'block';
+
+  } catch (e) {
+    console.error('Erro ao carregar planilha:', e);
+    loading.style.display = 'none';
+    erro.style.display    = 'flex';
+  }
+}
+
+
 function playFishSound() {
   try {
     const audio = document.getElementById('soundFish');
