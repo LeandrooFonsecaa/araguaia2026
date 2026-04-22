@@ -45,10 +45,8 @@ const RANKING_MEDALS = ['🥇', '🥈', '🥉'];
 /* ===========================
    PERSISTÊNCIA
 =========================== */
-const getCapituras = () => { try { return JSON.parse(localStorage.getItem('araguaia_capturas') || '[]'); } catch { return []; } };
+const getCapituras  = () => { try { return JSON.parse(localStorage.getItem('araguaia_capturas') || '[]'); } catch { return []; } };
 const saveCapituras = arr => localStorage.setItem('araguaia_capturas', JSON.stringify(arr));
-const getGaleria = () => { try { return JSON.parse(localStorage.getItem('araguaia_galeria') || '[]'); } catch { return []; } };
-function saveGaleria(arr) { try { localStorage.setItem('araguaia_galeria', JSON.stringify(arr)); } catch { showToast('⚠️ Armazenamento cheio — imagem não salva.'); } }
 
 /* ===========================
    SCROLL HEADER SHADOW
@@ -231,6 +229,7 @@ function registrarCaptura() {
   showFormMsg(msgEl, `✅ ${nome} registrado! ${pontos} pts com ${ESPECIES_LABEL[especie]} de ${tamanho}cm.`, 'ok');
   renderRanking();
   renderPodium();
+  renderRankingDestaque();
   updateDashboard();
 
   // Som de linha fisgando
@@ -296,6 +295,7 @@ function limparRanking() {
     saveCapituras([]);
     renderRanking();
     renderPodium();
+    renderRankingDestaque();
     updateDashboard();
     showToast('🗑️ Ranking zerado.');
     vibrate(60);
@@ -749,11 +749,11 @@ function playFishSound() {
 function highlightCardapioHoje() {
   const hoje = new Date();
   const dia  = hoje.getDate();
-  const mes  = hoje.getMonth() + 1; // abril = 4
+  const mes  = hoje.getMonth() + 1;
 
-  if (mes !== 4) return; // só em abril
+  if (mes !== 4) return;
 
-  const mapa = { 23: '23/04', 24: '24/04', 25: '25/04', 27: '27/04', 28: '28/04' };
+  const mapa = { 23: '23/04', 24: '24/04', 25: '25/04', 26: '26/04', 27: '27/04', 28: '28/04' };
   const dataStr = mapa[dia];
   if (!dataStr) return;
 

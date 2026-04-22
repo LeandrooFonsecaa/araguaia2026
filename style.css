@@ -992,22 +992,22 @@ body {
 /* ===== WHATSAPP FAB ===== */
 .whatsapp-fab {
   position: fixed;
-  bottom: 24px;
-  right: 20px;
+  bottom: 20px;
+  right: 16px;
   z-index: 999;
-  width: 52px;
-  height: 52px;
+  width: 42px;
+  height: 42px;
   background: #25D366;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(37,211,102,0.5);
+  box-shadow: 0 3px 14px rgba(37,211,102,0.45);
   transition: all 0.25s ease;
   color: #fff;
 }
-.whatsapp-fab svg { width: 28px; height: 28px; }
-.whatsapp-fab:hover { transform: scale(1.12); box-shadow: 0 6px 28px rgba(37,211,102,0.7); }
+.whatsapp-fab svg { width: 22px; height: 22px; }
+.whatsapp-fab:hover { transform: scale(1.1); box-shadow: 0 5px 20px rgba(37,211,102,0.65); }
 
 /* ===== PÓDIO ===== */
 .podium-wrap {
