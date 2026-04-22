@@ -421,12 +421,10 @@ const CLOUDINARY_CLOUD  = 'dgcbu6x0j';
 const CLOUDINARY_PRESET = 'araguaia2026';
 const CLOUDINARY_FOLDER = 'araguaia2026';
 
-const getGaleriaCloud   = () => { try { return JSON.parse(localStorage.getItem('araguaia_galeria_cloud') || '[]'); } catch { return []; } };
-const saveGaleriaCloud  = arr => { try { localStorage.setItem('araguaia_galeria_cloud', JSON.stringify(arr)); } catch {} };
-const getGaleriaGlobal  = () => { try { return JSON.parse(localStorage.getItem('araguaia_galeria_global') || '[]'); } catch { return []; } };
-const saveGaleriaGlobal = arr => { try { localStorage.setItem('araguaia_galeria_global', JSON.stringify(arr)); } catch {} };
+const getGaleriaCloud  = () => { try { return JSON.parse(localStorage.getItem('araguaia_galeria_cloud') || '[]'); } catch { return []; } };
+const saveGaleriaCloud = arr => { try { localStorage.setItem('araguaia_galeria_cloud', JSON.stringify(arr)); } catch {} };
 
-let _cwWidget     = null;
+let _cwWidget    = null;
 let _pendingPhoto = null;
 
 /* ===========================
@@ -574,58 +572,24 @@ async function carregarFotosCloudinary() {
   if (!grid) return;
   loading.style.display = 'block';
   grid.innerHTML = '';
-
-  try {
-    // Busca lista pública da pasta no Cloudinary
-    const url = `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/list/${CLOUDINARY_FOLDER}.json`;
-    const res  = await fetch(url + '?ts=' + Date.now());
-    const data = await res.json();
-
-    const remoteItems = (data.resources || []).map(r => ({
-      url:      `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/upload/q_auto,f_auto,w_800/${r.public_id}`,
-      publicId: r.public_id,
-      nome:     r.context?.custom?.nome || '',
-      data:     r.context?.custom?.data || '',
-      ts:       r.version || 0,
-    })).sort((a, b) => b.ts - a.ts);
-
-    const merged = mergeGaleria(remoteItems, getGaleriaCloud());
-    saveGaleriaGlobal(merged);
-    loading.style.display = 'none';
-    renderItens(grid, merged);
-
-  } catch(e) {
-    loading.style.display = 'none';
-    renderItens(grid, mergeGaleria(getGaleriaGlobal(), getGaleriaCloud()));
-  }
+  loading.style.display = 'none';
+  renderGaleriaCloud();
 }
 
-function mergeGaleria(base, local) {
-  const localMap = {};
-  local.forEach(item => {
-    const key = item.publicId || item.url;
-    if (key) localMap[key] = item;
-  });
-  const merged = base.map(item => {
-    const key = item.publicId || item.url;
-    return localMap[key] ? { ...item, ...localMap[key] } : item;
-  });
-  local.forEach(item => {
-    const key = item.publicId || item.url;
-    if (!base.find(b => (b.publicId || b.url) === key)) merged.unshift(item);
-  });
-  return merged;
-}
+function renderGaleriaCloud() {
+  const cached = getGaleriaCloud();
+  const grid   = document.getElementById('galleryGrid');
+  if (!grid) return;
 
-function renderItens(grid, items) {
-  if (!items.length) {
+  if (!cached.length) {
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-dim);padding:40px">Nenhuma foto ainda. Seja o primeiro a registrar a expedição! 📸</div>';
     return;
   }
-  grid.innerHTML = items.map((item, i) => {
-    const url     = typeof item === 'string' ? item : item.url;
-    const nome    = typeof item === 'object' ? (item.nome || '') : '';
-    const data    = typeof item === 'object' ? (item.data || '') : '';
+
+  grid.innerHTML = cached.map((item, i) => {
+    const url   = typeof item === 'string' ? item : item.url;
+    const nome  = typeof item === 'object' && item.nome ? item.nome : '';
+    const data  = typeof item === 'object' && item.data ? item.data : '';
     const caption = nome
       ? `<div class="gallery-item-caption"><strong>${escapeHtml(nome)}</strong>${data ? ' · ' + escapeHtml(data) : ''}</div>`
       : '';
@@ -634,12 +598,6 @@ function renderItens(grid, items) {
       ${caption}
     </div>`;
   }).join('');
-}
-
-function renderGaleriaCloud() {
-  const grid = document.getElementById('galleryGrid');
-  if (!grid) return;
-  renderItens(grid, mergeGaleria(getGaleriaGlobal(), getGaleriaCloud()));
 }
 
 function renderGaleria() { renderGaleriaCloud(); }
