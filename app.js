@@ -629,12 +629,13 @@ function initObserver() {
 =========================== */
 function initCarousel() {
   const track  = document.getElementById('carouselTrack');
-  const slides = track ? Array.from(track.querySelectorAll('.carousel-slide')) : [];
+  const inner  = document.getElementById('carouselInner');
+  const slides = inner ? Array.from(inner.querySelectorAll('.carousel-slide')) : [];
   const dotsEl = document.getElementById('carouselDots');
   const prev   = document.getElementById('carouselPrev');
   const next   = document.getElementById('carouselNext');
 
-  if (!slides.length) return;
+  if (!slides.length || !inner) return;
 
   let current = 0;
   let autoTimer;
@@ -648,14 +649,9 @@ function initCarousel() {
 
   function goTo(idx) {
     current = (idx + slides.length) % slides.length;
-    track.style.transform = `translateX(-${current * 100}%)`;
-    track.style.transition = 'transform 0.45s cubic-bezier(0.4,0,0.2,1)';
+    inner.style.transform = `translateX(-${current * 100}%)`;
     dots.forEach((d, i) => d.classList.toggle('active', i === current));
   }
-
-  // Tornar a track flex com translateX
-  track.style.display   = 'flex';
-  track.style.transform = 'translateX(0)';
 
   prev.addEventListener('click', () => { goTo(current - 1); resetAuto(); });
   next.addEventListener('click', () => { goTo(current + 1); resetAuto(); });
@@ -664,8 +660,8 @@ function initCarousel() {
 
   // Touch/swipe
   let startX = 0;
-  track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
-  track.addEventListener('touchend',   e => {
+  inner.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  inner.addEventListener('touchend',   e => {
     const diff = startX - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 40) { goTo(diff > 0 ? current + 1 : current - 1); resetAuto(); }
   });
