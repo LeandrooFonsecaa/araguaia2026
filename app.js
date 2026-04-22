@@ -421,10 +421,51 @@ const CLOUDINARY_CLOUD  = 'dgcbu6x0j';
 const CLOUDINARY_PRESET = 'araguaia2026';
 const CLOUDINARY_FOLDER = 'araguaia2026';
 
-const getGaleriaCloud  = () => { try { return JSON.parse(localStorage.getItem('araguaia_galeria_cloud') || '[]'); } catch { return []; } };
-const saveGaleriaCloud = arr => { try { localStorage.setItem('araguaia_galeria_cloud', JSON.stringify(arr)); } catch {} };
+// JSONBin — banco de dados compartilhado da galeria
+const JSONBIN_KEY = '$2a$10$GWY/GrD8Gc5jVCgSnCJDeebKmFb9PvZRAqaeHxDzd4cnqvZE8T2UC';
+const JSONBIN_BIN = '69e914a6856a68218960440e';
+const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN}`;
 
-let _cwWidget    = null;
+const getGaleriaCloud   = () => { try { return JSON.parse(localStorage.getItem('araguaia_galeria_cloud') || '[]'); } catch { return []; } };
+const saveGaleriaCloud  = arr => { try { localStorage.setItem('araguaia_galeria_cloud', JSON.stringify(arr)); } catch {} };
+const getGaleriaGlobal  = () => { try { return JSON.parse(localStorage.getItem('araguaia_galeria_global') || '[]'); } catch { return []; } };
+const saveGaleriaGlobal = arr => { try { localStorage.setItem('araguaia_galeria_global', JSON.stringify(arr)); } catch {} };
+
+async function lerFotosJSONBin() {
+  try {
+    const res  = await fetch(JSONBIN_URL + '/latest', {
+      headers: { 'X-Master-Key': JSONBIN_KEY }
+    });
+    const data = await res.json();
+    return data.record?.fotos || [];
+  } catch(e) { return []; }
+}
+
+async function salvarFotosJSONBin(fotos) {
+  try {
+    const res = await fetch(JSONBIN_URL, {
+      method:  'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_KEY,
+        'X-Bin-Versioning': 'false'
+      },
+      body: JSON.stringify({ fotos })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      console.error('JSONBin PUT erro:', res.status, data);
+      return false;
+    }
+    console.log('JSONBin salvo OK:', data?.metadata?.id);
+    return true;
+  } catch(e) {
+    console.error('JSONBin erro:', e);
+    return false;
+  }
+}
+
+let _cwWidget     = null;
 let _pendingPhoto = null;
 
 /* ===========================
@@ -543,14 +584,33 @@ function salvarLegenda() {
   const nome = document.getElementById('legendaNome').value.trim();
   const data = document.getElementById('legendaData').value.trim();
   const entry = { url: _pendingPhoto.url, nome: nome || 'Sem legenda', data: data || '', ts: Date.now() };
+
+  // Salva local imediatamente (resposta rápida)
   const cached = getGaleriaCloud();
   cached.unshift(entry);
   saveGaleriaCloud(cached);
+
   fecharModalLegenda();
   renderGaleriaCloud();
-  showToast('📷 Foto salva com sucesso!');
+  showToast('📷 Salvando foto para todos...');
   vibrate([20, 30, 20]);
   _pendingPhoto = null;
+
+  // Salva no JSONBin (compartilhado para todos)
+  lerFotosJSONBin().then(fotos => {
+    if (!fotos.find(f => f.url === entry.url)) {
+      fotos.unshift(entry);
+    }
+    salvarFotosJSONBin(fotos).then(ok => {
+      if (ok) {
+        saveGaleriaGlobal(fotos);
+        renderGaleriaCloud();
+        showToast('📷 Foto visível para todos! 🎉');
+      } else {
+        showToast('⚠️ Foto salva localmente. Tente novamente.');
+      }
+    });
+  });
 }
 
 function cancelarLegenda() {
@@ -572,24 +632,55 @@ async function carregarFotosCloudinary() {
   if (!grid) return;
   loading.style.display = 'block';
   grid.innerHTML = '';
-  loading.style.display = 'none';
-  renderGaleriaCloud();
+
+  try {
+    // Busca fotos do JSONBin — visíveis para todos
+    const fotos = await lerFotosJSONBin();
+
+    if (fotos.length > 0) {
+      saveGaleriaGlobal(fotos);
+      // Mescla com cache local (para incluir uploads muito recentes)
+      const merged = mergeGaleria(fotos, getGaleriaCloud());
+      loading.style.display = 'none';
+      renderItens(grid, merged);
+    } else {
+      // JSONBin vazio — mostra só cache local
+      loading.style.display = 'none';
+      renderItens(grid, getGaleriaCloud());
+    }
+
+  } catch(e) {
+    loading.style.display = 'none';
+    renderItens(grid, mergeGaleria(getGaleriaGlobal(), getGaleriaCloud()));
+  }
 }
 
-function renderGaleriaCloud() {
-  const cached = getGaleriaCloud();
-  const grid   = document.getElementById('galleryGrid');
-  if (!grid) return;
+function mergeGaleria(base, local) {
+  const localMap = {};
+  local.forEach(item => {
+    const key = item.publicId || item.url;
+    if (key) localMap[key] = item;
+  });
+  const merged = base.map(item => {
+    const key = item.publicId || item.url;
+    return localMap[key] ? { ...item, ...localMap[key] } : item;
+  });
+  local.forEach(item => {
+    const key = item.publicId || item.url;
+    if (!base.find(b => (b.publicId || b.url) === key)) merged.unshift(item);
+  });
+  return merged;
+}
 
-  if (!cached.length) {
+function renderItens(grid, items) {
+  if (!items.length) {
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-dim);padding:40px">Nenhuma foto ainda. Seja o primeiro a registrar a expedição! 📸</div>';
     return;
   }
-
-  grid.innerHTML = cached.map((item, i) => {
-    const url   = typeof item === 'string' ? item : item.url;
-    const nome  = typeof item === 'object' && item.nome ? item.nome : '';
-    const data  = typeof item === 'object' && item.data ? item.data : '';
+  grid.innerHTML = items.map((item, i) => {
+    const url     = typeof item === 'string' ? item : item.url;
+    const nome    = typeof item === 'object' ? (item.nome || '') : '';
+    const data    = typeof item === 'object' ? (item.data || '') : '';
     const caption = nome
       ? `<div class="gallery-item-caption"><strong>${escapeHtml(nome)}</strong>${data ? ' · ' + escapeHtml(data) : ''}</div>`
       : '';
@@ -598,6 +689,12 @@ function renderGaleriaCloud() {
       ${caption}
     </div>`;
   }).join('');
+}
+
+function renderGaleriaCloud() {
+  const grid = document.getElementById('galleryGrid');
+  if (!grid) return;
+  renderItens(grid, mergeGaleria(getGaleriaGlobal(), getGaleriaCloud()));
 }
 
 function renderGaleria() { renderGaleriaCloud(); }
