@@ -598,7 +598,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: top center;
+  object-position: center 20%;
   display: block;
   transition: transform 0.4s ease;
 }
@@ -983,7 +983,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: top center;
+  object-position: center 20%;
   display: block;
   transition: transform 0.4s ease;
 }
