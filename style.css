@@ -791,32 +791,37 @@ body {
   gap: 8px;
 }
 
+/* Container que faz o clipping — NÃO se move */
 .carousel-track {
-  display: flex;
-  overflow: hidden;
-  border-radius: 14px;
   flex: 1;
-  min-height: 340px;
+  overflow: hidden;          /* ← clipping aqui */
+  border-radius: 14px;
+  position: relative;
+}
+
+/* Faixa interna que desliza com translateX */
+.carousel-inner {
+  display: flex;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
 .carousel-slide {
   min-width: 100%;
-  position: relative;
   flex-shrink: 0;
-  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 14px;
+  position: relative;
   overflow: hidden;
   background: #0a1520;
+  border-radius: 14px;
 }
 
 .carousel-img {
   width: 100%;
-  height: 340px;
+  height: 360px;
   object-fit: cover;
   object-position: top center;
   display: block;
-  border-radius: 14px;
-  filter: brightness(0.75);
+  filter: brightness(0.72);
   transition: filter 0.3s;
 }
 
@@ -825,12 +830,11 @@ body {
 .carousel-caption {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  padding: 40px 20px 20px;
+  padding: 60px 20px 20px;
   background: linear-gradient(transparent, rgba(0,0,0,0.88));
   display: flex;
   flex-direction: column;
   gap: 4px;
-  border-radius: 0 0 14px 14px;
 }
 
 .car-badge {
@@ -913,7 +917,74 @@ body {
 
 @media (max-width: 480px) {
   .carousel-img { height: 260px; }
-  .carousel-track { min-height: 260px; }
   .carousel-arrow { width: 32px; height: 32px; font-size: 1.3rem; }
   .car-name { font-size: 1.2rem; }
+}
+
+/* ===== HALL — CARROSSEL ===== */
+.hall-carousel-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hall-carousel-track {
+  flex: 1;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.hall-carousel-inner {
+  display: flex;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.hall-slide {
+  min-width: 100%;
+  flex-shrink: 0;
+  padding: 2px; /* evita corte da borda */
+}
+
+/* Layout trio de fotos: 1 grande à esquerda + 2 menores empilhadas à direita */
+.hall-photo-trio {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  aspect-ratio: 16 / 9;
+  gap: 3px;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+}
+
+.hall-photo-wrap.trio-main {
+  grid-row: 1 / 3; /* ocupa as 2 linhas */
+  position: relative;
+  overflow: hidden;
+}
+
+.hall-photo-wrap.trio-side {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Herdar estilos de .hall-photo-wrap para trio */
+.hall-photo-wrap.trio-main .hall-photo,
+.hall-photo-wrap.trio-side .hall-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.hall-card:hover .hall-photo-wrap.trio-main .hall-photo,
+.hall-card:hover .hall-photo-wrap.trio-side .hall-photo {
+  transform: scale(1.04);
+}
+
+@media (max-width: 600px) {
+  .hall-photo-trio { aspect-ratio: 4 / 3; }
 }

@@ -628,19 +628,25 @@ function initObserver() {
    CARROSSEL
 =========================== */
 function initCarousel() {
-  const track  = document.getElementById('carouselTrack');
-  const inner  = document.getElementById('carouselInner');
-  const slides = inner ? Array.from(inner.querySelectorAll('.carousel-slide')) : [];
-  const dotsEl = document.getElementById('carouselDots');
-  const prev   = document.getElementById('carouselPrev');
-  const next   = document.getElementById('carouselNext');
+  setupCarousel('carouselInner', 'carouselPrev', 'carouselNext', 'carouselDots', 4000);
+}
+
+function initHallCarousel() {
+  setupCarousel('hallInner', 'hallPrev', 'hallNext', 'hallDots', 6000);
+}
+
+function setupCarousel(innerId, prevId, nextId, dotsId, interval) {
+  const inner  = document.getElementById(innerId);
+  const slides = inner ? Array.from(inner.querySelectorAll('.carousel-slide, .hall-slide')) : [];
+  const dotsEl = document.getElementById(dotsId);
+  const prev   = document.getElementById(prevId);
+  const next   = document.getElementById(nextId);
 
   if (!slides.length || !inner) return;
 
   let current = 0;
   let autoTimer;
 
-  // Criar dots
   dotsEl.innerHTML = slides.map((_, i) =>
     `<div class="carousel-dot${i === 0 ? ' active' : ''}" data-i="${i}"></div>`
   ).join('');
@@ -655,10 +661,9 @@ function initCarousel() {
 
   prev.addEventListener('click', () => { goTo(current - 1); resetAuto(); });
   next.addEventListener('click', () => { goTo(current + 1); resetAuto(); });
-
   dots.forEach(d => d.addEventListener('click', () => { goTo(+d.dataset.i); resetAuto(); }));
 
-  // Touch/swipe
+  // Swipe
   let startX = 0;
   inner.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
   inner.addEventListener('touchend',   e => {
@@ -666,8 +671,7 @@ function initCarousel() {
     if (Math.abs(diff) > 40) { goTo(diff > 0 ? current + 1 : current - 1); resetAuto(); }
   });
 
-  // Autoplay
-  function startAuto() { autoTimer = setInterval(() => goTo(current + 1), 4000); }
+  function startAuto() { autoTimer = setInterval(() => goTo(current + 1), interval); }
   function resetAuto()  { clearInterval(autoTimer); startAuto(); }
   startAuto();
 }
@@ -681,6 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initObserver();
   initCountdown();
   initCarousel();
+  initHallCarousel();
   updateDashboard();
   renderLogistica();
   renderGaleriaCloud();
