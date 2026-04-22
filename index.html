@@ -69,10 +69,10 @@
       </div>
 
       <div class="stats-grid">
-        <div class="stat-card" id="sc-pescadores">
+        <div class="stat-card clickable-card" id="sc-pescadores" onclick="abrirModalPescadores()" title="Ver lista de pescadores">
           <div class="stat-icon">👨‍🦱</div>
           <div class="stat-value" id="totalPescadores">–</div>
-          <div class="stat-label">Pescadores</div>
+          <div class="stat-label">Pescadores <span class="card-hint">👆 ver lista</span></div>
         </div>
         <div class="stat-card" id="sc-barcos">
           <div class="stat-icon">🚤</div>
@@ -151,7 +151,7 @@
               <img src="campeao_2025_leo.jpg" alt="Leo - Campeão 2025" class="carousel-img" />
               <div class="carousel-caption">
                 <span class="car-badge car-gold">🥇 Campeão 2025</span>
-                <span class="car-name">Leo</span>
+                <span class="car-name">Leo Piraíba</span>
                 <span class="car-detail">Piraíba · 130 cm · 650 pts</span>
               </div>
             </div>
@@ -160,7 +160,7 @@
               <img src="campeao_2025_ninim.jpg" alt="Ninim - Campeão 2025" class="carousel-img" />
               <div class="carousel-caption">
                 <span class="car-badge car-gold">🥇 Campeão 2025</span>
-                <span class="car-name">Ninim</span>
+                <span class="car-name">Ninim Piraíba</span>
                 <span class="car-detail">Piraíba · 130 cm · 650 pts</span>
               </div>
             </div>
@@ -169,7 +169,7 @@
               <img src="campeao_2024_marquim.jpg" alt="Marquim - Campeão 2024" class="carousel-img" />
               <div class="carousel-caption">
                 <span class="car-badge car-gold">🥇 Campeão 2024</span>
-                <span class="car-name">Marquim</span>
+                <span class="car-name">Markim Piraíba</span>
                 <span class="car-detail">Piraíba · 126 cm · 630 pts</span>
               </div>
             </div>
@@ -187,7 +187,7 @@
               <img src="ninim_peso_2024.jpg" alt="Ninim - Maior Peso 2024" class="carousel-img" />
               <div class="carousel-caption">
                 <span class="car-badge car-special">🏅 Campeão do Peso 2024</span>
-                <span class="car-name">Ninim</span>
+                <span class="car-name">Ninim Arraia</span>
                 <span class="car-detail">Arraia · +60 kg</span>
               </div>
             </div>
@@ -196,7 +196,7 @@
               <img src="junior_vice_2025.jpg" alt="Junior - Vice 2025" class="carousel-img" />
               <div class="carousel-caption">
                 <span class="car-badge car-silver">🥈 Vice-Campeão 2025</span>
-                <span class="car-name">Junior</span>
+                <span class="car-name">Júnior Pirarara</span>
                 <span class="car-detail">Pirarara · 135 cm · 540 pts</span>
               </div>
             </div>
@@ -705,6 +705,17 @@
     </section>
 
   </main>
+
+  <!-- MODAL PESCADORES -->
+  <div class="modal-pescadores" id="modalPescadores" style="display:none" onclick="fecharModalPescadores(event)">
+    <div class="modal-pesc-box card">
+      <div class="modal-pesc-header">
+        <h3>🎣 Pescadores por Barco</h3>
+        <button class="modal-pesc-close" onclick="fecharModalPescadores()">✕</button>
+      </div>
+      <div class="modal-pesc-body" id="modalPescadoresList"></div>
+    </div>
+  </div>
 
   <!-- Toast -->
   <div class="toast" id="toast" role="status" aria-live="polite"></div>

@@ -817,15 +817,23 @@ body {
 
 .carousel-img {
   width: 100%;
-  height: 240px;
+  height: 260px;
   object-fit: cover;
-  object-position: top center;
+  object-position: center center;
   display: block;
   filter: brightness(0.72);
   transition: filter 0.3s;
 }
 
 .carousel-slide:hover .carousel-img { filter: brightness(0.85); }
+
+@media (min-width: 769px) {
+  .carousel-img { height: 300px; }
+}
+@media (min-width: 1100px) {
+  .carousel-img { height: 320px; }
+  .carousel-track { max-width: 860px; margin: 0 auto; }
+}
 
 .carousel-caption {
   position: absolute;
@@ -1373,4 +1381,123 @@ body {
   background: rgba(66,133,244,0.22);
   border-color: rgba(66,133,244,0.6);
   transform: translateY(-1px);
+}
+
+/* ===== CARD CLICÁVEL ===== */
+.clickable-card {
+  cursor: pointer;
+  position: relative;
+}
+.clickable-card:hover {
+  border-color: var(--amber) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 24px rgba(245,158,11,0.2);
+}
+.card-hint {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--amber);
+  letter-spacing: 1px;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+/* ===== MODAL PESCADORES ===== */
+.modal-pescadores {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,0.82);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-pesc-box {
+  max-width: 480px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+.modal-pesc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+
+.modal-pesc-header h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  color: var(--amber-lt);
+}
+
+.modal-pesc-close {
+  background: rgba(255,255,255,0.08);
+  border: none;
+  color: var(--text-dim);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.modal-pesc-close:hover { background: rgba(230,57,70,0.2); color: #ef4444; }
+
+.modal-pesc-body {
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-pesc-body::-webkit-scrollbar { width: 4px; }
+.modal-pesc-body::-webkit-scrollbar-track { background: transparent; }
+.modal-pesc-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+.pesc-barco-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-left: 3px solid var(--amber);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.pesc-barco-nome {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--amber-lt);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.pesc-tripulacao {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pesc-tag {
+  background: rgba(0,201,167,0.1);
+  border: 1px solid rgba(0,201,167,0.2);
+  color: var(--teal-lt);
+  font-size: 0.78rem;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-weight: 600;
 }

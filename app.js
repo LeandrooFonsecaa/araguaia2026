@@ -735,8 +735,37 @@ function setupCarousel(innerId, prevId, nextId, dotsId, interval) {
 }
 
 /* ===========================
-   TRANSPARÊNCIA — GOOGLE SHEETS
+   MODAL PESCADORES
 =========================== */
+function abrirModalPescadores() {
+  const modal = document.getElementById('modalPescadores');
+  const list  = document.getElementById('modalPescadoresList');
+  if (!modal || !list) return;
+
+  list.innerHTML = BARCOS.map(barco => `
+    <div class="pesc-barco-item">
+      <div class="pesc-barco-nome">⚓ ${escapeHtml(barco.nome)}</div>
+      <div class="pesc-tripulacao">
+        ${barco.tripulacao.map(p => `<span class="pesc-tag">${escapeHtml(p)}</span>`).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function fecharModalPescadores(e) {
+  if (e && e.target !== document.getElementById('modalPescadores')) return;
+  const modal = document.getElementById('modalPescadores');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+window.abrirModalPescadores  = abrirModalPescadores;
+window.fecharModalPescadores = fecharModalPescadores;
+
+
 const SHEET_ID = '1shWms_mr0JgmHe9kRgROE7Ge1LcQUihQPyYMR43OnU0';
 
 const CAT_CONFIG = {
